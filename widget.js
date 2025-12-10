@@ -23,6 +23,9 @@ const ACCESS_TOKEN = "OGFjN2E0Yzg5OWE4ZGMzYjAxOTlhYTgyNTNhNjAzZWN8IURwK0U1Y1FLbW
 // Parámetros obligatorios para pruebas
 const TEST_MODE = "EXTERNAL";
 
+// shopperResultUrl (OBLIGATORIO PARA REDIRIGIR)
+const SHOPPER_URL = "https://www.filippacasaflora.com/resultado-pago";
+
 // Genera un merchantTransactionId ÚNICO por transacción
 const merchantTransactionId = `FILIPPA_${Date.now()}`;
 
@@ -32,16 +35,13 @@ const merchantTransactionId = `FILIPPA_${Date.now()}`;
 
 window.wpwlOptions = {
     locale: "es",
-
     paymentBrands: ["VISA", "MASTER"],
-
     customer: {
         givenName: customerName,
         surname: customerLastname,
         email: email,
         phone: phone
     },
-
     billingAddress: {
         street1: "Prueba 123",
         city: "CDMX",
@@ -49,25 +49,24 @@ window.wpwlOptions = {
         country: "MX",
         postcode: "01000"
     },
-
-    onReady: function() {
+    onReady: function () {
         console.log("WPWL listo en Filippa.");
     }
 };
 
 // ================================
-// INJECTA AUTOMÁTICAMENTE EL FORM WPWL
+// INYECTA AUTOMÁTICAMENTE EL FORM WPWL
 // ================================
 
 function loadPayOnWidget(checkoutId) {
-    const container = document.getElementById("formPagoPayOn");
+    const container = document.getElementById("paymentWidget");
     if (!container) {
-        console.error("No existe el contenedor #formPagoPayOn en la página.");
+        console.error("No existe el contenedor #paymentWidget en la página.");
         return;
     }
 
     container.innerHTML = `
-        <form action="/resultado-pago" class="paymentWidgets" data-brands="VISA MASTER"></form>
+        <form action="${SHOPPER_URL}" class="paymentWidgets" data-brands="VISA MASTER"></form>
     `;
 
     const script = document.createElement("script");
@@ -76,10 +75,9 @@ function loadPayOnWidget(checkoutId) {
 }
 
 // ================================
-// FUNCIONES PARA WIX (LLAMADAS DESDE wix-code)
+// GENERAR CHECKOUT
 // ================================
 
-// Generar checkout desde PayOn
 async function generarCheckout() {
 
     const body =
@@ -87,13 +85,14 @@ async function generarCheckout() {
         `&amount=${amount}` +
         `&currency=MXN` +
         `&paymentType=DB` +
-        `&testMode=${TEST_MODE}` +        // <== requerido por el banco
+        `&testMode=${TEST_MODE}` +
         `&merchantTransactionId=${merchantTransactionId}` +
-        `&descriptor=${DESCRIPTOR}` +     // <== número de afiliación
+        `&descriptor=${DESCRIPTOR}` +
         `&customer.email=${email}` +
         `&customer.givenName=${customerName}` +
         `&customer.surname=${customerLastname}` +
-        `&customer.mobile=${phone}`;
+        `&customer.mobile=${phone}` +
+        `&shopperResultUrl=${encodeURIComponent(SHOPPER_URL)}`;
 
     try {
         const res = await fetch(`${BASE_URL}/v1/checkouts`, {
@@ -113,7 +112,6 @@ async function generarCheckout() {
             return;
         }
 
-        // Carga el widget
         loadPayOnWidget(data.id);
 
     } catch (err) {
@@ -121,5 +119,5 @@ async function generarCheckout() {
     }
 }
 
-// Llama automáticamente al generador
+// Ejecutar automáticamente
 generarCheckout();
