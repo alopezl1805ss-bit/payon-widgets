@@ -1,12 +1,12 @@
-// ================================
-// PayOn Dynamic Widget for Wix
-// By: Alejandro (Filippa Casa Flora)
-// ================================
+// =========================================
+// PayOn Widget Dinámico para Wix
+// Filippa Casa Flora
+// =========================================
 
-// Obtiene el <script> que carga este archivo y sus atributos:
+// Obtiene el <script> que carga este archivo y sus atributos
 const scriptEl = document.currentScript;
 
-// Lee los atributos enviados desde Wix
+// Atributos enviados desde Wix
 const amount = scriptEl.getAttribute("amount") || "100";
 const description = scriptEl.getAttribute("description") || "Pago Filippa";
 const email = scriptEl.getAttribute("email") || "test@mail.com";
@@ -14,25 +14,23 @@ const phone = scriptEl.getAttribute("phone") || "+525512345678";
 const customerName = scriptEl.getAttribute("name") || "Cliente Test";
 const customerLastname = scriptEl.getAttribute("lastname") || "Prueba";
 
+// ==============================
 // CONFIGURACIÓN EXIGIDA POR EL BANCO
+// ==============================
 const DESCRIPTOR = "9791965";
 const ENTITY_ID = "8ac7a4c899a8dc3b0199aa8304cf03f0";
-const BASE_URL = "https://eu-test.oppwa.com";  // Ambiente UAT
+const BASE_URL = "https://eu-test.oppwa.com";
 const ACCESS_TOKEN = "OGFjN2E0Yzg5OWE4ZGMzYjAxOTlhYTgyNTNhNjAzZWN8IURwK0U1Y1FLbWltdD9xVWlVWHk=";
 
-// Parámetros obligatorios para pruebas
+// Modo de pruebas solicitado por PayOn
 const TEST_MODE = "EXTERNAL";
 
-// shopperResultUrl (OBLIGATORIO PARA REDIRIGIR)
-const SHOPPER_URL = "https://www.filippacasaflora.com/resultado-pago";
-
-// Genera un merchantTransactionId ÚNICO por transacción
+// ID único por transacción
 const merchantTransactionId = `FILIPPA_${Date.now()}`;
 
-// ================================
-// CONFIGURACIÓN DEL WIDGET (WPWL)
-// ================================
-
+// ==============================
+// CONFIGURACIÓN DEL WIDGET WPWL
+// ==============================
 window.wpwlOptions = {
     locale: "es",
     paymentBrands: ["VISA", "MASTER"],
@@ -48,25 +46,24 @@ window.wpwlOptions = {
         state: "CDMX",
         country: "MX",
         postcode: "01000"
-    },
-    onReady: function () {
-        console.log("WPWL listo en Filippa.");
     }
 };
 
-// ================================
-// INYECTA AUTOMÁTICAMENTE EL FORM WPWL
-// ================================
-
+// ==============================
+// FUNCIÓN QUE INYECTA EL FORMULARIO
+// ==============================
 function loadPayOnWidget(checkoutId) {
-    const container = document.getElementById("paymentWidget");
+    const container = document.getElementById("formPagoPayOn");
     if (!container) {
-        console.error("No existe el contenedor #paymentWidget en la página.");
+        console.error("No existe el contenedor #formPagoPayOn");
         return;
     }
 
     container.innerHTML = `
-        <form action="${SHOPPER_URL}" class="paymentWidgets" data-brands="VISA MASTER"></form>
+        <form class="paymentWidgets"
+            data-brands="VISA MASTER"
+            action="https://www.filippacasaflora.com/resultado-pago">
+        </form>
     `;
 
     const script = document.createElement("script");
@@ -74,10 +71,9 @@ function loadPayOnWidget(checkoutId) {
     document.body.appendChild(script);
 }
 
-// ================================
-// GENERAR CHECKOUT
-// ================================
-
+// ==============================
+// GENERAR CHECKOUT (Llamado desde WIX)
+// ==============================
 async function generarCheckout() {
 
     const body =
@@ -91,8 +87,7 @@ async function generarCheckout() {
         `&customer.email=${email}` +
         `&customer.givenName=${customerName}` +
         `&customer.surname=${customerLastname}` +
-        `&customer.mobile=${phone}` +
-        `&shopperResultUrl=${encodeURIComponent(SHOPPER_URL)}`;
+        `&customer.mobile=${phone}`;
 
     try {
         const res = await fetch(`${BASE_URL}/v1/checkouts`, {
